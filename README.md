@@ -36,6 +36,11 @@ Copy python.exe file and create python3.7.9.exe file.
 
 ## Create virtual environment (venv)
 Paste code below to create venv
+Install virtualenv
+```PowerShell
+python3.7.9 -m pip install --user virtualenv
+```
+Create venv
 ```PowerShell
 python -m venv ap-menu-env
 ```
