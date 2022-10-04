@@ -1,0 +1,751 @@
+openapi: "3.0.2"
+info:
+  title: API Title
+  version: "1.0"
+servers:
+  - url: http://127.0.0.1:8000
+tags:
+  - name: User
+    description: Operations with ser
+  - name: Order
+    description: Operations with order
+  - name: Menu
+    description: Operations with menu
+  - name: Product
+    description: Operations with product
+
+paths:
+  /user:
+    post:
+      tags:
+        - User
+      summary: Create user
+      description: Add new client or manager account
+      requestBody:
+        description: New client or manager info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '201':
+          description: New user was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: The user already exists
+        '412':
+          description: Invalid input data
+  /user/{id}:
+    put:
+      tags:
+        - User
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Update an existing user
+      description: Update personal information by id
+      parameters:
+        - name: id
+          in: path
+          description: id of user to be updated
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: Updated personal info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: The user data was successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Invalid user id, user not found
+        '412':
+          description: Invalid input data
+    delete:
+      tags:
+        - User
+      security:
+        - cookieAuth_manager: []
+      summary: Delete an existing user
+      description: Delete an existing user by id
+      parameters:
+        - name: id
+          in: path
+          description: id of user to be deleted
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: The user was successfully deleted
+        '404':
+          description: Invalid user id, user not found
+    get:
+      tags:
+        - User
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Get user info
+      description: Get all info about an existing user by id
+      parameters:
+        - name: id
+          in: path
+          description: id of user to be returned
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: User was successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Invalid user id, user not found
+  /user/{id}/makeManager:
+    put:
+      tags:
+        - User
+      security:
+        - cookieAuth_manager: []
+      summary: Give a user manager rights
+      description: Update user role as 'manager' for user by id
+      parameters:
+        - name: id
+          in: path
+          description: id of user to be given manager rights
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: User role was successfully updated
+        '404':
+          description: Invalid user id, user not found
+  /user/getAll:
+    get:
+      tags:
+        - User
+      security:
+        - cookieAuth_manager: []
+      summary: Get all users
+      description: get the list of all users and their personal info
+      responses:
+        '200':
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  /user/login:
+    post:
+      tags:
+        - User
+      security:
+        - basicAuth: []
+      summary: Log user into the system
+      description: Create a new session for an existing user
+#      requestBody:
+#        description: Authorization information
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                email:
+#                  type: string
+#                  example: m.anderson@gmil.com
+#                password:
+#                  type: string
+#                  example: 12345hhh
+      responses:
+        '201':
+          description: Session successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '412':
+          description: Invalid input data
+        '401':
+          description: User not authenticated
+  /user/logout:
+    delete:
+      tags:
+        - User
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Log user out of the system
+      description: End session for an existing user
+      responses:
+        '200':
+          description: Session successfully ended
+  /order:
+    post:
+      tags:
+        - Order
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Create new order
+      description: Create order (dish name, quantity, address)
+      requestBody:
+        description: New order info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+        required: true
+      responses:
+        '201':
+          description: New order was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '412':
+          description: Invalid input data
+  /order/{id}:
+    get:
+      tags:
+        - Order
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Get order info
+      description: Get all info about an existing order by id
+      parameters:
+        - name: id
+          in: path
+          description: id of order to be returned
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Order was successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Invalid order id, order not found
+    delete:
+      tags:
+        - Order
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Delete an existing order
+      description: Delete order by id
+      parameters:
+        - name: id
+          in: path
+          description: id of order to be deleted
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: The order was successfully deleted
+  /order/{id}/updateStatus:
+    put:
+      tags:
+        - Order
+      security:
+        - cookieAuth_manager: []
+      summary: Update status to order
+      description: Follow the progress of order preparing  by updating  status
+      parameters:
+        - name: id
+          in: path
+          description: id of order to be given new status
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: New order status
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: InProgress
+      responses:
+        '200':
+          description: Order status  was successfully updated
+        '404':
+          description: Invalid order id, order not found
+        '412':
+          description: Invalid input data
+  /order/getAll:
+    get:
+      tags:
+        - Order
+      security:
+        - cookieAuth_manager: []
+      summary: Get all orders
+      description: get the list of all orders and their details
+      responses:
+        '200':
+          description: List of all orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+  /menu:
+    post:
+      tags:
+        - Menu
+      security:
+        - cookieAuth_manager: []
+      summary: Create new menu item
+      description: Create new drink/confection with all details about it
+      requestBody:
+        description: New menu item info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+        required: true
+      responses:
+        '201':
+          description: New menu item was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '409':
+          description: Menu item with specified name already exists
+        '412':
+          description: Invalid input data
+  /menu/{id}:
+    put:
+      tags:
+        - Menu
+      security:
+        - cookieAuth_manager: []
+      summary: Update an existing menu item
+      description: Update any details about existing drink/confection
+      parameters:
+        - name: id
+          in: path
+          description: id of menu item to be updated
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: Updated menu item info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+      responses:
+        '200':
+          description: The menu item  was successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          description: Invalid menu id, user not found
+        '412':
+          description: Invalid input data
+    delete:
+      tags:
+        - Menu
+      security:
+        - cookieAuth_manager: []
+      summary: Delete an existing menu item
+      description: Delete an existing menu item by id
+      parameters:
+        - name: id
+          in: path
+          description: id of menu item to be deleted
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: The menu item was successfully deleted
+        '404':
+          description: Invalid menu id, user not found
+    get:
+      tags:
+        - Menu
+      summary: Get menu item
+      description: Get all info about an existing menu item by id
+      parameters:
+        - name: id
+          in: path
+          description: id of menu item to be returned
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Menu item was successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          description: Invalid menu item id, menu item not found
+  /menu/getAll:
+    get:
+      tags:
+        - Menu
+      summary: Get all menu items
+      description: get the list of all drinks/confections and their details
+      responses:
+        '200':
+          description: List of all menu items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Menu'
+  /menu/{id}/AddToDemand:
+    put:
+      tags:
+        - Menu
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Add an existing menu item to demand list
+      description: In case the drink/confection is not available, add it to demand list
+      parameters:
+        - name: id
+          in: path
+          description: id of menu item to be added to demand list
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: The menu item  was successfully added to demand list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          description: Invalid menu id, user not found
+  /product:
+    post:
+      tags:
+        - Product
+      security:
+        - cookieAuth_manager: []
+      summary: Create new product
+      description: Create new product to add to cafe warehouse
+      requestBody:
+        description: New product info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        '201':
+          description: New product was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '409':
+          description: The product with this name already exists
+        '412':
+          description: Invalid input data
+  /product/{id}:
+    put:
+      tags:
+        - Product
+      security:
+        - cookieAuth_manager: []
+      summary: Update an existing product
+      description: Update product information by product id
+      parameters:
+        - name: id
+          in: path
+          description: id of product to be updated
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: Updated product info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: The product data was successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Invalid product id, product not found
+        '412':
+          description: Invalid input data
+    delete:
+      tags:
+        - Product
+      security:
+        - cookieAuth_manager: []
+      summary: Delete an existing product
+      description: Delete an existing product by id
+      parameters:
+        - name: id
+          in: path
+          description: id of product to be deleted
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: The product was successfully deleted
+        '404':
+          description: Invalid product id, product not found
+    get:
+      tags:
+        - Product
+      security:
+        - cookieAuth_manager: []
+      summary: Get product info
+      description: Get all info about an existing product by id
+      parameters:
+        - name: id
+          in: path
+          description: id of product to be returned
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Product was successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Invalid product id, product not found
+  /product/getAll:
+    get:
+      tags:
+        - Product
+      security:
+        - cookieAuth_manager: []
+      summary: Get all products
+      description: Get the list of all products and their details
+      responses:
+        '200':
+          description: List of all products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        u_name:
+          type: string
+          example: Mary
+        u_surname:
+          type: string
+          example: Anderson
+        u_phone:
+          type: string
+          example: +38(097)-345-23-12
+          description: The phone number of user, must go with country-identifying prefix, like +38
+        u_email:
+          type: string
+          example: m.anderson@gmil.com
+          description: The email address of user, must be in the format of an email address, like example@mail.com
+        u_password:
+          type: string
+          writeOnly: true
+          example: anderson.cafeacc.2233
+
+    Address:
+      type: object
+      properties:
+        a_street:
+          type: string
+          example: Kopernika
+        a_house:
+          type: string
+          example: 23a
+        a_flat:
+          type: integer
+          format: int64
+          example: 12
+    Details:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          format: int64 # 32?
+          example: 5
+        menu_id:
+          type: integer
+          format: int64 # 32?
+          example: 7
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        price:
+          type: number
+          format: float
+          example: 245.5
+        date:
+          type: string
+          format: date-time
+          example: 2021-01-30T08:30:00Z
+        details_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/Details'
+        address:
+          $ref: '#/components/schemas/Address'
+    Menu:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        m_name:
+          type: string
+          example: Muffin
+        m_price:
+          type: number
+          format: float
+          description: Price for one drink/confection
+          example: 12.8
+        m_availability:
+          type: boolean
+          description: Indicates whether the drink/confection is available for buying or not
+          example: true
+        m_demand:
+          type: boolean
+          description: In case drink/confection is not available, indicates whether it is in the demand list or not
+          example: true
+        ingredients_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+
+    Ingredient:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          example: 1
+        i_weight:
+          type: number
+          format: float
+          description: Weight for one type of ingredient for the menu item
+        i_percent:
+          type: number
+          format: float
+          description: The percentage of extra charge
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1
+        p_name:
+          type: string
+          example: flour
+        p_price:
+          type: number
+          format: float
+          description: Price for one kg of product
+        p_weight:
+          type: number
+          format: float
+          description: Total weight of product
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth_client:
+      description: Client authentication
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+    cookieAuth_manager:
+      description: Manager authentication
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+#  securitySchemes:
+#    manager_auth:
+#      type: oauth2
+#      flows:
+#        implicit:
+#          authorizationUrl: https://cafe_dol/oauth/authorize
+#          scopes:
+#            write: add, update and delete users, orders, menu items and products
+#            read: read info about users, orders, menu items and products
+
+
+
+
