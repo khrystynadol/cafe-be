@@ -58,13 +58,7 @@ Paste code below to see python paths:
 where.exe python
 ```
 
-## Install Flask, Waitress and requirements.txt
-```PowerShell
-pip install Flask
-```
-```PowerShell
-pip install waitress
-```
+## Install requirements.txt
 ```PowerShell
 pip install -r requirements.txt
 ```
@@ -78,6 +72,74 @@ waitress-serve --host 127.0.0.1 --port 5000 server:menuapp
 ```PowerShell
 deactivate
 ```
+
+
+## Опис проекту
+Написати сервіс для роботи меню кафе. 
+Провізор (менеджер) може додавати страви в базу, видаляти, редагувати інформацію про них. 
+Можливість замовлення страви на ВЖЕ залежить від наявності страви (якщо наявні всі інгредієнти (для цього база даних)). 
+В списку буде можливість переглянути всі страви, щоб зробити передзамовлення (на майбутнє число). 
+Користувач може переглядати інформацію про всі страви, 
+здійснювати замовлення на вже та майбутнє (майбутнє вимагає підтвердження провізора).
+
+## Сутності:
+- User
+- Address
+- Order
+- Details
+- Menu
+- Ingredient
+- Product
+
+## Ролі
+- role_viewer
+- role_client
+- role_manager
+
+## Дії над сутностями + хто має доступ:
+1) User:
+- Add // role_viewer
+- UpdatePersonalInform // role_client, role_manager
+- Login // role_client, role_manage
+- Logout // role_client, role_manager
+- Delete // role_client, role_manager
+- GetUser // role_client, role_manager
+- GetAllUsers // role_manager
+- SetRole // role_manager
+2) Address:
+- Add // role_client, role_manager
+- Delete // role_manager
+- GetAddress // role_client, role_manager
+- GetAllAddresses // role_manager
+3) Order:
+- Add // role_client, role_manager
+- SetStatus // role_manager
+- GetOrder // role_client, role_manager
+- GetAllOrders // role_manager
+- Delete // role_client, role_manager
+4) Details:
+- Update // role_manager
+- GetAllDetailsForOrder // role_client, role_manager
+- GetAllDetails // role_manager
+5) Menu:
+- GetAllMenu // role_viewer, role_client, role_manager
+- GetMenu // role_viewer, role_client, role_manager
+- AddToDemand // role_client, role_manager
+- Add // role_manager
+- Update // role_manager
+- Delete // role_manager
+6) Ingredient:
+- Add // role_manager
+- Update // role_manager
+- GetIngredient // role_manager
+- GetAllIngredients // role_manager
+- Delete // role_manager
+7) Product:
+- Add // role_manager
+- Update // role_manager
+- GetProduct // role_manager
+- GetAllProducts // role_manager
+- Delete // role_manager
 
 
  
