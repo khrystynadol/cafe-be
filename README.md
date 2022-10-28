@@ -72,6 +72,7 @@ waitress-serve --host 127.0.0.1 --port 5000 server:menuapp
 ```PowerShell
 deactivate
 ```
+
 ## Для роботи з базою даних mysql необхідно встановити бібліотеку SQLAlchemy ORM , знаходячись у віртуальному середовищі:
 ```
 pip install Flask Flask-SQLAlchemy
