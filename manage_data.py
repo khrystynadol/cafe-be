@@ -1,4 +1,4 @@
-from models import app, db, User, Product, Menu, Ingredient, details, Custom, Address
+from models import app, db, User, Product, Menu, Ingredient, Details, Custom, Address
 
 with app.app_context():
     user=User(u_name="Ivan",u_surname="Ivanov",u_phone="0934864659",
@@ -26,11 +26,11 @@ with app.app_context():
     db.session.commit()
 
     ingredient=Ingredient(i_weight=30,i_percent=50, Menu_id=menu.idMenu,Product_id=product.idProduct)
-    ingredient2=Ingredient(i_weight=70,i_percent=15, Menu_id=menu1.idMenu,Product_id=product1.idProduct)
+    ingredient2=Ingredient(i_weight=70,i_percent=15, Menu_id=menu2.idMenu,Product_id=product2.idProduct)
 
     custom=Custom(c_price=2550,Address_id=address.idAddress,User_id=user.idUser)
-    custom2=Custom(c_price=999,Address_id=address1.idAddress,User_id=user1.idUser)
-    custom3=Custom(c_price=1500,Address_id=address1.idAddress,User_id=user.idUser)
+    custom2=Custom(c_price=999,Address_id=address2.idAddress,User_id=user2.idUser)
+    custom3=Custom(c_price=1500,Address_id=address2.idAddress,User_id=user.idUser)
 
     db.session.add(ingredient)
     db.session.add(ingredient2)
