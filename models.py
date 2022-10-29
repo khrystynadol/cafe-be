@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 import enum
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+mysqldb://root:databasesql2022@localhost:3306/al-trecolore-menu"
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:databasesql2022@localhost:3306/al-trecolore-menu"
 
 db = SQLAlchemy(app)
 
@@ -109,16 +109,3 @@ class Ingredient(db.Model):
         return "<Flight  '{}' - '{}' on '{}'>" \
             .format(self.flight_from, self.flight_to, self.flight_date) """
 
-
-@app.route("/")
-def home():
-    return 'Home'
-
-
-@app.route("/api/v1/hello-world-<value>")
-def hello_world(value):
-    return "Hello world " + value, 200
-
-
-if __name__ == "__main__":
-    app.run()
