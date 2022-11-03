@@ -73,6 +73,33 @@ waitress-serve --host 127.0.0.1 --port 5000 server:menuapp
 deactivate
 ```
 
+## Для роботи з базою даних mysql необхідно встановити бібліотеку SQLAlchemy ORM , знаходячись у віртуальному середовищі:
+```
+pip install Flask Flask-SQLAlchemy
+```
+## Вказати URI до бази даних :
+   Для mysql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@host:port/database_name"```
+   Для postgresql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@host:port/database_name"```
+
+## Для створення міграцій необхідно встановити бібліотку Alembic у віртуальному середовищі :
+```
+pip install alembic
+```
+## Проініцюлювати Alembic:
+```
+alembic init alembic
+```
+## Змінити налаштування в alembic.ini файлі:
+
+sqlalchemy.url = mysql+mysqldb://root:root@localhost:3306/database_name
+## Встановити пакет mysqlclient:
+```
+pip install mysqlclient
+```
+## Для створення міргації виконуємо команду
+```
+alembic upgrade head
+```
 
 ## Опис проекту
 Написати сервіс для роботи меню кафе. 
