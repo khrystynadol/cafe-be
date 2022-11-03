@@ -26,9 +26,11 @@ class User(db.Model):
     u_password = db.Column(db.String(45), nullable=False)
     u_role = db.Column(db.Enum(UserStatus), nullable=True,default=UserStatus.CLIENT.value)
 
+
 """     def __repr__(self):
         return "<User: '{}' '{}', email: '{}'>" \
             .format(self.first_name, self.last_name, self.email) """
+
 
 class Address(db.Model):
     __tablename__ = 'address'
@@ -37,6 +39,7 @@ class Address(db.Model):
     a_street = db.Column(db.String(45), nullable=False)
     a_house = db.Column(db.String(45), nullable=False)
     a_flat = db.Column(db.Integer, nullable=True, default='0')
+
 
 """     def __repr__(self):
         return "<Additional passenger : '{}' '{}', email: '{}'>" \
@@ -51,6 +54,7 @@ class Product(db.Model):
     p_price = db.Column(db.Integer, nullable=True)
     p_weight = db.Column(db.Integer, nullable=True)
 
+
 """     def __repr__(self):
         return "<Booking by user id: '{}', price: '{} >" \
             .format( self.userid, self.total_price) """
@@ -64,6 +68,7 @@ class Custom(db.Model):
     Address_id = db.Column(db.Integer, db.ForeignKey('address.idAddress'))
     User_id = db.Column(db.Integer, db.ForeignKey('user.idUser'))
 
+
 """     def __repr__(self):
         return "<Booking by user id: '{}', price: '{} >" \
             .format( self.userid, self.total_price) """
@@ -76,6 +81,7 @@ class Details(db.Model):
     d_quantity = db.Column(db.Integer, nullable=True, default='1')
     Custom_id = db.Column(db.Integer, db.ForeignKey('custom.idCustom'))
     Menu_id = db.Column(db.Integer, db.ForeignKey('menu.idMenu'))
+
 
 """
     def __repr__(self):
@@ -92,6 +98,7 @@ class Menu(db.Model):
     m_availability = db.Column(db.Boolean, nullable=True, default='0' )
     m_demand = db.Column(db.Boolean, nullable=True, default='0')
 
+
 """     def __repr__(self):
         return "<Sit number : '{}', availability : '{}', price: '{}'>" \
             .format(self.sitnumber, self.available, self.price) """
@@ -105,6 +112,7 @@ class Ingredient(db.Model):
     i_percent = db.Column(db.Integer, nullable=False, default='20')
     Menu_id = db.Column(db.Integer, db.ForeignKey('menu.idMenu'))
     Product_id = db.Column(db.Integer, db.ForeignKey('product.idProduct'))
+
 
 """     def __repr__(self):
         return "<Flight  '{}' - '{}' on '{}'>" \
