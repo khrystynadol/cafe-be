@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 import enum
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://user:databasesql2022@localhost:3306/al-trecolore-menu
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://user:databasesql2022@localhost:3306/al-trecolore-menu"
 
 db = SQLAlchemy(app)
 

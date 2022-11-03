@@ -9,30 +9,32 @@
 ## Pyenv and Python 3.7.9 version installation
 
 ### On Windows
-Open PowerShell as administrator and paste code below:
-```PowerShell
-Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"; &"./install-pyenv-win.ps1"
-```
+   Open PowerShell as administrator and paste code below:
+   ```PowerShell
+   Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"; &"./install-pyenv-win.ps1"
+   ```
 1. Add PYENV, PYENV_HOME and PYENV_ROOT to your Environment Variables:
-```PowerShell
-[System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
+   ```PowerShell
+   [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
 
-[System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
+   [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
 
-[System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-```
+   [System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
+   ```
 2. Add the following paths to your USER PATH variable in order to access the pyenv command:
-```PowerShell
-[System.Environment]::SetEnvironmentVariable('path', $env:USERPROFILE + "\.pyenv\pyenv-win\bin;" + $env:USERPROFILE + "\.pyenv\pyenv-win\shims;" + [System.Environment]::GetEnvironmentVariable('path', "User"),"User")
-```
-Installation is done.
-Now install python 3.7.9 version using code below:
-```PowerShell
-pyenv install 3.7.9
-```
-Installation will take a lot of time, so don't worry.
-Don't forget to add python.exe path to PATHs in System.
-Copy python.exe file and create python3.7.9.exe file.
+   ```PowerShell
+   [System.Environment]::SetEnvironmentVariable('path', $env:USERPROFILE + "\.pyenv\pyenv-win\bin;" + $env:USERPROFILE + "\.pyenv\pyenv-win\shims;" + [System.Environment]::GetEnvironmentVariable('path', "User"),"User")
+   ```
+   Installation is done. 
+   Now install python 3.7.9 version using code below:
+   ```PowerShell
+   pyenv install 3.7.9
+   ```
+   Installation will take a lot of time, so don't worry.
+
+   Don't forget to add python.exe path to PATHs in System.
+
+   Copy python.exe file and create python3.7.9.exe file.
 
 ## Create virtual environment (venv)
 Paste code below to create venv
