@@ -745,7 +745,3 @@ components:
 #          scopes:
 #            write: add, update and delete users, orders, menu items and products
 #            read: read info about users, orders, menu items and products
-
-
-
-
