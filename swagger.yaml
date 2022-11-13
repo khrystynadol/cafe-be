@@ -6,9 +6,9 @@ servers:
   - url: http://127.0.0.1:8000
 tags:
   - name: User
-    description: Operations with user
-  - name: Custom
-    description: Operations with custom
+    description: Operations with ser
+  - name: Order
+    description: Operations with order
   - name: Menu
     description: Operations with menu
   - name: Product
@@ -39,8 +39,6 @@ paths:
           description: The user already exists
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
   /user/{id}:
     put:
       tags:
@@ -75,8 +73,6 @@ paths:
           description: Invalid user id, user not found
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
     delete:
       tags:
         - User
@@ -97,8 +93,6 @@ paths:
           description: The user was successfully deleted
         '404':
           description: Invalid user id, user not found
-        '400':
-          description: Incorrect request
     get:
       tags:
         - User
@@ -124,8 +118,6 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           description: Invalid user id, user not found
-        '400':
-          description: Incorrect request
   /user/{id}/makeManager:
     put:
       tags:
@@ -147,10 +139,6 @@ paths:
           description: User role was successfully updated
         '404':
           description: Invalid user id, user not found
-        '400':
-          description: Incorrect request
-        '408':
-          description: The user already has role manager
   /user/getAll:
     get:
       tags:
@@ -168,8 +156,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
-        '400':
-          description: Incorrect request
   /user/login:
     post:
       tags:
@@ -178,19 +164,19 @@ paths:
         - basicAuth: []
       summary: Log user into the system
       description: Create a new session for an existing user
-      requestBody:
-       description: Authorization information
-       content:
-         application/json:
-           schema:
-             type: object
-             properties:
-               email:
-                 type: string
-                 example: m.anderson@gmil.com
-               password:
-                 type: string
-                 example: 12345hhh
+#      requestBody:
+#        description: Authorization information
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                email:
+#                  type: string
+#                  example: m.anderson@gmil.com
+#                password:
+#                  type: string
+#                  example: 12345hhh
       responses:
         '201':
           description: Session successfully created
@@ -202,8 +188,6 @@ paths:
           description: Invalid input data
         '401':
           description: User not authenticated
-        '400':
-          description: Incorrect request
   /user/logout:
     delete:
       tags:
@@ -216,48 +200,44 @@ paths:
       responses:
         '200':
           description: Session successfully ended
-        '400':
-          description: Incorrect request
-  /custom:
+  /order:
     post:
       tags:
-        - Custom
+        - Order
       security:
         - cookieAuth_client: []
         - cookieAuth_manager: []
-      summary: Create new custom
-      description: Create custom (dish name, quantity, address)
+      summary: Create new order
+      description: Create order (dish name, quantity, address)
       requestBody:
-        description: New custom info
+        description: New order info
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Custom'
+              $ref: '#/components/schemas/Order'
         required: true
       responses:
         '201':
-          description: New custom was created
+          description: New order was created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Custom'
+                $ref: '#/components/schemas/Order'
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
-  /custom/{id}:
+  /order/{id}:
     get:
       tags:
-        - Custom
+        - Order
       security:
         - cookieAuth_client: []
         - cookieAuth_manager: []
-      summary: Get custom info
-      description: Get all info about an existing custom by id
+      summary: Get order info
+      description: Get all info about an existing order by id
       parameters:
         - name: id
           in: path
-          description: id of custom to be returned
+          description: id of order to be returned
           required: true
           schema:
             type: integer
@@ -268,50 +248,46 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Custom'
+                $ref: '#/components/schemas/Order'
         '404':
-          description: Invalid custom id, order not found
-        '400':
-          description: Incorrect request
+          description: Invalid order id, order not found
     delete:
       tags:
-        - Custom
+        - Order
       security:
         - cookieAuth_client: []
         - cookieAuth_manager: []
-      summary: Delete an existing custom
-      description: Delete custom by id
+      summary: Delete an existing order
+      description: Delete order by id
       parameters:
         - name: id
           in: path
-          description: id of custom to be deleted
+          description: id of order to be deleted
           required: true
           schema:
             type: integer
             example: 1
       responses:
         '200':
-          description: The custom was successfully deleted
-        '400':
-          description: Incorrect request
-  /custom/{id}/updateStatus:
+          description: The order was successfully deleted
+  /order/{id}/updateStatus:
     put:
       tags:
-        - Custom
+        - Order
       security:
         - cookieAuth_manager: []
-      summary: Update status to custom
-      description: Follow the progress of custom preparing  by updating status
+      summary: Update status to order
+      description: Follow the progress of order preparing  by updating  status
       parameters:
         - name: id
           in: path
-          description: id of custom to be given new status
+          description: id of order to be given new status
           required: true
           schema:
             type: integer
             example: 1
       requestBody:
-        description: New custom status
+        description: New order status
         content:
           application/json:
             schema:
@@ -322,32 +298,28 @@ paths:
                   example: InProgress
       responses:
         '200':
-          description: Custom status  was successfully updated
+          description: Order status  was successfully updated
         '404':
-          description: Invalid custom id, custom not found
+          description: Invalid order id, order not found
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
-  /custom/getAll:
+  /order/getAll:
     get:
       tags:
-        - Custom
+        - Order
       security:
         - cookieAuth_manager: []
-      summary: Get all customs
-      description: get the list of all customs and their details
+      summary: Get all orders
+      description: get the list of all orders and their details
       responses:
         '200':
-          description: List of all customs
+          description: List of all orders
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Custom'
-        '400':
-          description: Incorrect request
+                  $ref: '#/components/schemas/Order'
   /menu:
     post:
       tags:
@@ -407,8 +379,6 @@ paths:
           description: Invalid menu id, user not found
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
     delete:
       tags:
         - Menu
@@ -429,8 +399,6 @@ paths:
           description: The menu item was successfully deleted
         '404':
           description: Invalid menu id, user not found
-        '400':
-          description: Incorrect request
     get:
       tags:
         - Menu
@@ -453,8 +421,6 @@ paths:
                 $ref: '#/components/schemas/Menu'
         '404':
           description: Invalid menu item id, menu item not found
-        '400':
-          description: Incorrect request
   /menu/getAll:
     get:
       tags:
@@ -470,8 +436,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Menu'
-        '400':
-          description: Incorrect request
   /menu/{id}/AddToDemand:
     put:
       tags:
@@ -498,8 +462,6 @@ paths:
                 $ref: '#/components/schemas/Menu'
         '404':
           description: Invalid menu id, user not found
-        '400':
-          description: Incorrect request
   /product:
     post:
       tags:
@@ -526,8 +488,6 @@ paths:
           description: The product with this name already exists
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
   /product/{id}:
     put:
       tags:
@@ -561,8 +521,6 @@ paths:
           description: Invalid product id, product not found
         '412':
           description: Invalid input data
-        '400':
-          description: Incorrect request
     delete:
       tags:
         - Product
@@ -583,8 +541,6 @@ paths:
           description: The product was successfully deleted
         '404':
           description: Invalid product id, product not found
-        '400':
-          description: Incorrect request
     get:
       tags:
         - Product
@@ -609,8 +565,6 @@ paths:
                 $ref: '#/components/schemas/Product'
         '404':
           description: Invalid product id, product not found
-        '400':
-          description: Incorrect request
   /product/getAll:
     get:
       tags:
@@ -628,8 +582,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
-        '400':
-          description: Incorrect request
 
 components:
   schemas:
@@ -641,21 +593,21 @@ components:
           format: int64
           readOnly: true
           example: 1
-        name:
+        u_name:
           type: string
           example: Mary
-        surname:
+        u_surname:
           type: string
           example: Anderson
-        phone:
+        u_phone:
           type: string
-          example: 0973452312
+          example: +38(097)-345-23-12
           description: The phone number of user, must go with country-identifying prefix, like +38
-        email:
+        u_email:
           type: string
           example: m.anderson@gmil.com
           description: The email address of user, must be in the format of an email address, like example@mail.com
-        password:
+        u_password:
           type: string
           writeOnly: true
           example: anderson.cafeacc.2233
@@ -663,29 +615,19 @@ components:
     Address:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-          readOnly: true
-          example: 1
-        street:
+        a_street:
           type: string
           example: Kopernika
-        house:
+        a_house:
           type: string
           example: 23a
-        flat:
+        a_flat:
           type: integer
           format: int64
           example: 12
     Details:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-          readOnly: true
-          example: 1
         quantity:
           type: integer
           format: int64 # 32?
@@ -694,7 +636,7 @@ components:
           type: integer
           format: int64 # 32?
           example: 7
-    Custom:
+    Order:
       type: object
       properties:
         id:
@@ -714,8 +656,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Details'
-        user:
-          $ref: '#/components/schemas/User'
         address:
           $ref: '#/components/schemas/Address'
     Menu:
@@ -726,19 +666,19 @@ components:
           format: int64
           readOnly: true
           example: 1
-        name:
+        m_name:
           type: string
           example: Muffin
-        price:
+        m_price:
           type: number
           format: float
           description: Price for one drink/confection
           example: 12.8
-        availability:
+        m_availability:
           type: boolean
           description: Indicates whether the drink/confection is available for buying or not
           example: true
-        demand:
+        m_demand:
           type: boolean
           description: In case drink/confection is not available, indicates whether it is in the demand list or not
           example: true
@@ -750,15 +690,15 @@ components:
     Ingredient:
       type: object
       properties:
-        id:
+        product_id:
           type: integer
           format: int64
           example: 1
-        weight:
+        i_weight:
           type: number
           format: float
           description: Weight for one type of ingredient for the menu item
-        percent:
+        i_percent:
           type: number
           format: float
           description: The percentage of extra charge
@@ -771,14 +711,14 @@ components:
           format: int64
           readOnly: true
           example: 1
-        name:
+        p_name:
           type: string
           example: flour
-        price:
+        p_price:
           type: number
           format: float
           description: Price for one kg of product
-        weight:
+        p_weight:
           type: number
           format: float
           description: Total weight of product
