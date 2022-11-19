@@ -1,6 +1,4 @@
-from flask import request, jsonify
-from flask_login import login_user, LoginManager  # login_required, current_user, logout_user, UserMixin
-# from werkzeug.security import check_password_hash, generate_password_hash
+from flask import request, jsonify, Response
 from database.models import app, PersonStatus, Person, Custom, Menu, Product, Details  # , Address, Details, Ingredient
 
 from validation.schemas import *
@@ -11,49 +9,65 @@ from flask_httpauth import HTTPBasicAuth
 import json
 
 app.debug = True
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
 
 CORS(app)
 
-authBasic = HTTPBasicAuth()
+auth = HTTPBasicAuth()
+
+
+@auth.verify_password
+def verify_password(u_email, u_password):
+    user_to_verify = Person.query.filter_by(email=u_email).first()
+    if not user_to_verify:
+        return None
+    if check_password_hash(user_to_verify.password, u_password):
+        print("email: " + u_email + ", password: " + u_password)
+        return user_to_verify
+    else:
+        return None
+
+
+@auth.error_handler
+def auth_error_handler(status):
+    message = ""
+    if status == 401:
+        message = "Wrong email or password"
+    if status == 403:
+        message = "Access denied"
+    return {"code": status, "message": message}, status
+
+
+@auth.get_user_roles
+def get_user_roles(user_to_get_role):
+    print(user_to_get_role.role.value)
+    return user_to_get_role.role.value
 
 
 def error_handler(func):
     def wrapper(*args, **kwargs):
-        # print("error_handler")
         try:
-            # result = 0
+            result = 0
             if 0 == len(kwargs):
                 result = func()
             else:
                 result = func(**kwargs)
-            if result[1] >= 400:
-                return {
-                    "code": result[1],
-                    "message": result[0]
-                }, result[1]
+            if result.__class__ != Response and result[1] >= 400:
+                return {"code": result[1],
+                        "message": result[0]
+                        }, result[1]
             else:
                 return result
         except ValidationError as err:
-            # print(err.messages)
             return {"code": 412,
                     "message": err.messages
                     }, 412
         except IntegrityError as err:
-            # print(err.args)
             return {"code": 409,
                     "message": err.args
                     }, 409
 
     wrapper.__name__ = func.__name__
     return wrapper
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Person.query.get(user_id)
 
 
 def get_all_people():
@@ -86,6 +100,7 @@ def user():
 
 @app.route("/user/login", methods=['POST'])
 @error_handler
+@auth.login_required(role=['client', 'manager'])
 def login():
     if request.method == 'POST' and request.is_json:
         login_data = request.get_json()
@@ -100,7 +115,6 @@ def login():
                 "message": "Incorrect password"
             }, 412
         else:
-            login_user(user_login)
             return {
                 "id": user_login.id,
                 "message": "Success"
@@ -112,6 +126,7 @@ def login():
 
 
 @app.route("/user/logout", methods=['DELETE'])
+@auth.login_required(role=['client', 'manager'])
 def logout():
     if request.method == 'DELETE':
         return {
@@ -123,10 +138,41 @@ def logout():
         }, 400
 
 
-@app.route("/user/<int:user_id>", methods=['GET', 'DELETE', 'POST', 'PUT'])
+@app.route("/user/<int:user_id>", methods=['PUT'])
 @error_handler
+@auth.login_required(role=['client', 'manager'])
+def user_update(user_id):
+    current_user = auth.current_user()
+    print(user_id, current_user.id)
+    if current_user.id != int(user_id):
+        return "Access denied", 403
+    if request.method == 'PUT':
+        person_data = PersonToUpdateSchema().load(request.json)
+        person_to_update = Person.query.filter_by(id=user_id).first()
+        if not person_to_update:
+            return {
+                "message": "Client not found"
+            }, 404
+        else:
+            update_input(person_to_update, **person_data)
+            return jsonify(PersonToUpdateSchema().dump(person_to_update)), 200
+    else:
+        return {
+            "message": "Incorrect request"
+        }, 400
+
+
+@app.route("/user/<int:user_id>", methods=['GET', 'DELETE'])
+@error_handler
+@auth.login_required(role=['client', 'manager'])
 def user_to(user_id):
+    current_user = auth.current_user()
+    print(user_id, current_user.id)
     if request.method == 'GET':
+        u_role = current_user.role.value
+        if u_role == 'client' and current_user.id != int(user_id):
+            return "Access denied", 403
+
         person_to_get_info = Person.query.filter_by(id=user_id).first()
         if person_to_get_info is None:
             return {
@@ -135,8 +181,9 @@ def user_to(user_id):
         else:
             return jsonify(PersonSchema().dump(person_to_get_info)), 200
     elif request.method == 'DELETE':
-        res = 0
-        if res == 0:  # user_id == current_user.id:
+        if current_user.id != int(user_id):
+            return "Access denied", 403
+        elif current_user.id == int(user_id):
             person_to_delete = Person.query.filter_by(id=user_id).first()
             order_to_delete = Custom.query.filter_by(user_id=user_id).all()
             if person_to_delete is None:
@@ -157,16 +204,6 @@ def user_to(user_id):
             return {
                 "message": "You try to delete another user"
             }
-    elif request.method == 'PUT':
-        person_data = PersonToUpdateSchema().load(request.json)
-        person_to_update = Person.query.filter_by(id=user_id).first()
-        if person_to_update is None:
-            return {
-                "message": "Client not found"
-            }, 404
-        else:
-            update_input(person_to_update, **person_data)
-            return jsonify(PersonToUpdateSchema().dump(person_to_update)), 200
     else:
         return {
             "message": "Incorrect request"
@@ -174,6 +211,7 @@ def user_to(user_id):
 
 
 @app.route("/user/<int:user_id>/makeManager", methods=['PUT'])
+@auth.login_required(role='manager')
 def make_m(user_id):
     user_to_work = Person.query.filter_by(id=user_id).first()
     if request.method == 'PUT':
@@ -198,6 +236,7 @@ def make_m(user_id):
 
 
 @app.route("/user/getAll", methods=['GET'])
+@auth.login_required(role='manager')
 def get_all_user():
     if request.method == 'GET':
         return json.dumps([p.as_dict() for p in Person.query.all()],
@@ -210,11 +249,15 @@ def get_all_user():
 
 @app.route("/custom", methods=['POST'])
 @error_handler
+@auth.login_required(role='client')
 def custom():
+    current_user = auth.current_user()
     if request.method == 'POST' and request.is_json:
         custom_data = CustomSchema().load(request.json)
         new_custom = Custom(**custom_data)
         new_custom.time = datetime.datetime.now()
+        if new_custom.user_id != current_user.id:
+            return "Access denied", 403
         db.session.add(new_custom)
         db.session.commit()
         return jsonify(CustomSchema().dump(new_custom)), 201
@@ -228,17 +271,26 @@ def custom():
 
 @app.route("/custom/<int:custom_id>", methods=['GET', 'DELETE', 'PUT'])
 @error_handler
+@auth.login_required(role=['client', 'manager'])
 def custom_to(custom_id):
+    current_user = auth.current_user()
+    u_role = current_user.role.value
+    custom_info = Custom.query.filter_by(id=custom_id).first()
     if request.method == 'GET':
         custom_to_get_info = Custom.query.filter_by(id=custom_id).first()
-        if custom_to_get_info is None:
+        if not custom_to_get_info:
             return {
                 "message": "There is no custom with such id"
             }, 404
+        elif u_role == 'client' and current_user.id != custom_info.user_id:
+            return "Access denied", 403
         else:
             return jsonify(CustomSchema().dump(custom_to_get_info)), 200
     elif request.method == 'DELETE':
         custom_to_delete = Custom.query.filter_by(id=custom_id).first()
+        if current_user.id != custom_info.user_id:
+            return "Access denied", 403
+
         if custom_to_delete is None:
             return {
                 "message": "There is no user with such id"
@@ -254,6 +306,9 @@ def custom_to(custom_id):
     elif request.method == 'PUT' and request.is_json:
         custom_data = CustomToUpdateSchema().load(request.json)
         custom_to_update = Custom.query.filter_by(id=custom_id).first()
+        if current_user.id != custom_info.user_id:
+            return "Access denied", 403
+
         if custom_to_update is None:
             return {
                 "message": "Custom not found"
@@ -272,6 +327,7 @@ def custom_to(custom_id):
 
 @app.route("/custom/<int:custom_id>/updateStatus", methods=['PUT'])
 @error_handler
+@auth.login_required(role='manager')
 def update_cust_status(custom_id):
     if request.method == 'PUT':
         status_data = CustomUpdateStatusSchema().load(request.json)
@@ -290,6 +346,7 @@ def update_cust_status(custom_id):
 
 
 @app.route("/custom/getAll", methods=['GET'])
+@auth.login_required(role='manager')
 def get_all_cust():
     if request.method == 'GET':
         return json.dumps([p.as_dict() for p in Custom.query.all()],
@@ -302,6 +359,7 @@ def get_all_cust():
 
 @app.route("/menu", methods=['POST'])
 @error_handler
+@auth.login_required(role='manager')
 def menu():
     if request.method == 'POST' and request.is_json:
         menu_data = MenuSchema().load(request.json)
@@ -313,18 +371,23 @@ def menu():
         }, 400
 
 
-@app.route("/menu/<int:menu_id>", methods=['GET', 'DELETE', 'PUT'])
+@app.route("/menu/<int:menu_id>", methods=['GET'])
 @error_handler
+def menu_to_get(menu_id):
+    menu_to_get_info = Menu.query.filter_by(id=menu_id).first()
+    if menu_to_get_info is None:
+        return {
+            "message": "There is no menu item with such id"
+        }, 404
+    else:
+        return jsonify(MenuSchema().dump(menu_to_get_info)), 200
+
+
+@app.route("/menu/<int:menu_id>", methods=['DELETE', 'PUT'])
+@error_handler
+@auth.login_required(role='manager')
 def menu_to(menu_id):
-    if request.method == 'GET':
-        menu_to_get_info = Menu.query.filter_by(id=menu_id).first()
-        if menu_to_get_info is None:
-            return {
-                "message": "There is no menu item with such id"
-            }, 404
-        else:
-            return jsonify(MenuSchema().dump(menu_to_get_info)), 200
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         menu_to_delete = Menu.query.filter_by(id=menu_id).first()
         if menu_to_delete is None:
             return {
@@ -352,6 +415,7 @@ def menu_to(menu_id):
 
 
 @app.route("/menu//<int:menu_id>/AddToDemand", methods=['PUT'])
+@auth.login_required(role=['client', 'manager'])
 def add_to_demand(menu_id):
     if request.method == 'PUT':
         menu_to_demand = Menu.query.filter_by(id=menu_id).first()
@@ -385,6 +449,7 @@ def get_all_menu():
 
 @app.route("/product", methods=['POST'])
 @error_handler
+@auth.login_required(role='manager')
 def product():
     if request.method == 'POST' and request.is_json:
         product_data = ProductSchema().load(request.json)
@@ -397,6 +462,7 @@ def product():
 
 
 @app.route("/product/<int:product_id>", methods=['GET', 'DELETE', 'PUT'])
+@auth.login_required(role='manager')
 def product_to(product_id):
     if request.method == 'GET':
         product_to_get_info = Product.query.filter_by(id=product_id).first()
@@ -434,6 +500,7 @@ def product_to(product_id):
 
 
 @app.route("/product/getAll", methods=['GET'])
+@auth.login_required(role='manager')
 def get_all_prod():
     if request.method == 'GET':
         return json.dumps([p.as_dict() for p in Product.query.all()],
