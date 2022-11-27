@@ -6,7 +6,8 @@ import enum
 app = Flask(__name__)
 app.secret_key = 'just secret key'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:12345@localhost:5432/al-trecolore-menu"
+#app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:12345@localhost:5432/al-trecolore-menu"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:databasesql2022@localhost:5432/al-trecolore-menu"
 # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+mysqldb://root:databasesql2022@localhost:3306/al-trecolore-menu"
 
 db = SQLAlchemy(app)
