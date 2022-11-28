@@ -17,7 +17,7 @@ with app.app_context():
     menu1 = Menu(name="Late", price=56, availability=1, demand=0)
     menu2 = Menu(name="Cupcake", price=99, availability=0, demand=0)
 
-    db.session.add(person1)
+
     db.session.add(person2)
     db.session.add(person3)
     db.session.add(address1)
