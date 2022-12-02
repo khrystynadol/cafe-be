@@ -3,7 +3,7 @@ info:
   title: API Title
   version: "1.0"
 servers:
-  - url: http://127.0.0.1:8000
+  - url: http://127.0.0.1:5000
 tags:
   - name: User
     description: Operations with user
@@ -35,12 +35,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '409':
-          description: The user already exists
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
   /user/{id}:
     put:
       tags:
@@ -71,16 +69,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '404':
-          description: Invalid user id, user not found
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
     delete:
       tags:
         - User
       security:
+        - cookieAuth_client: []
         - cookieAuth_manager: []
       summary: Delete an existing user
       description: Delete an existing user by id
@@ -95,10 +98,12 @@ paths:
       responses:
         '200':
           description: The user was successfully deleted
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid user id, user not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
     get:
       tags:
         - User
@@ -122,10 +127,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid user id, user not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
   /user/{id}/makeManager:
     put:
       tags:
@@ -145,12 +152,14 @@ paths:
       responses:
         '200':
           description: User role was successfully updated
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid user id, user not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
         '408':
-          description: The user already has role manager
+          $ref: '#/components/responses/AlreadyManagerError'
   /user/getAll:
     get:
       tags:
@@ -168,8 +177,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
-        '400':
-          description: Incorrect request
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
   /user/login:
     post:
       tags:
@@ -190,7 +201,7 @@ paths:
                  example: m.anderson@gmil.com
                password:
                  type: string
-                 example: 12345hhh
+                 example: 12345
       responses:
         '201':
           description: Session successfully created
@@ -198,12 +209,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '412':
-          description: Invalid input data
         '401':
-          description: User not authenticated
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/WrongCredentialsError'
   /user/logout:
     delete:
       tags:
@@ -216,15 +223,12 @@ paths:
       responses:
         '200':
           description: Session successfully ended
-        '400':
-          description: Incorrect request
   /custom:
     post:
       tags:
         - Custom
       security:
         - cookieAuth_client: []
-        - cookieAuth_manager: []
       summary: Create new custom
       description: Create custom (dish name, quantity, address)
       requestBody:
@@ -241,11 +245,78 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Custom'
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
   /custom/{id}:
+    put:
+      tags:
+        - Custom
+      security:
+        - cookieAuth_manager: []
+      summary: Update some info of custom
+      description: Update address or price of current custom
+      parameters:
+        - name: id
+          in: path
+          description: id of custom to be given new status
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: Info to update
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: InProgress
+      responses:
+        '200':
+          description: Custom status  was successfully updated
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
+    delete:
+      tags:
+        - Custom
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Delete an existing custom
+      description: Delete custom by id
+      parameters:
+        - name: id
+          in: path
+          description: id of custom to be deleted
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: The custom was successfully deleted
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
     get:
       tags:
         - Custom
@@ -269,31 +340,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Custom'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid custom id, order not found
-        '400':
-          description: Incorrect request
-    delete:
-      tags:
-        - Custom
-      security:
-        - cookieAuth_client: []
-        - cookieAuth_manager: []
-      summary: Delete an existing custom
-      description: Delete custom by id
-      parameters:
-        - name: id
-          in: path
-          description: id of custom to be deleted
-          required: true
-          schema:
-            type: integer
-            example: 1
-      responses:
-        '200':
-          description: The custom was successfully deleted
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
   /custom/{id}/updateStatus:
     put:
       tags:
@@ -323,12 +375,16 @@ paths:
       responses:
         '200':
           description: Custom status  was successfully updated
-        '404':
-          description: Invalid custom id, custom not found
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
   /custom/getAll:
     get:
       tags:
@@ -346,8 +402,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Custom'
-        '400':
-          description: Incorrect request
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
   /menu:
     post:
       tags:
@@ -370,10 +428,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Menu'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '409':
-          description: Menu item with specified name already exists
-        '412':
-          description: Invalid input data
+          $ref: '#/components/responses/IntegrityError'
   /menu/{id}:
     put:
       tags:
@@ -403,12 +465,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Menu'
-        '404':
-          description: Invalid menu id, user not found
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
     delete:
       tags:
         - Menu
@@ -427,10 +493,12 @@ paths:
       responses:
         '200':
           description: The menu item was successfully deleted
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid menu id, user not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
     get:
       tags:
         - Menu
@@ -452,26 +520,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Menu'
         '404':
-          description: Invalid menu item id, menu item not found
-        '400':
-          description: Incorrect request
-  /menu/getAll:
-    get:
-      tags:
-        - Menu
-      summary: Get all menu items
-      description: get the list of all drinks/confections and their details
-      responses:
-        '200':
-          description: List of all menu items
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Menu'
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
   /menu/{id}/AddToDemand:
     put:
       tags:
@@ -496,10 +545,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Menu'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid menu id, user not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
+  /menu/getAll:
+    get:
+      tags:
+        - Menu
+      summary: Get all menu items
+      description: get the list of all drinks/confections
+      responses:
+        '200':
+          description: List of all menu items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Menu'
+  /menu/filter:
+    put:
+      tags:
+        - Menu
+      security:
+        - cookieAuth_client: []
+        - cookieAuth_manager: []
+      summary: Filter menu items by name and ingredients
+      description: find some drinks/confections by their name and ingredients
+      responses:
+        '200':
+          description: List of all menu items
+          content:
+            application/json:
+              schema:
+                example:
+                  name: Late
+                  products:
+                    - 1
+                    - 2
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
   /product:
     post:
       tags:
@@ -522,12 +612,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-        '409':
-          description: The product with this name already exists
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
   /product/{id}:
     put:
       tags:
@@ -557,12 +649,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-        '404':
-          description: Invalid product id, product not found
-        '412':
-          description: Invalid input data
         '400':
-          description: Incorrect request
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/IntegrityError'
     delete:
       tags:
         - Product
@@ -581,10 +677,12 @@ paths:
       responses:
         '200':
           description: The product was successfully deleted
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid product id, product not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
     get:
       tags:
         - Product
@@ -607,10 +705,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
         '404':
-          description: Invalid product id, product not found
-        '400':
-          description: Incorrect request
+          $ref: '#/components/responses/NotFoundError'
   /product/getAll:
     get:
       tags:
@@ -628,10 +728,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
-        '400':
-          description: Incorrect request
+        '401':
+          $ref: '#/components/responses/WrongCredentialsError'
+        '403':
+          $ref: '#/components/responses/AccessDeniedError'
+
 
 components:
+  responses:
+    AccessDeniedError:
+      description: Access denied
+    ValidationError:
+      description: Invalid input data
+    IntegrityError:
+      description: Violation of integrity
+    NotFoundError:
+      description: Resource not found
+    WrongCredentialsError:
+      description: Wrong email or password
+    AlreadyManagerError:
+      description: User is already manager
+
   schemas:
     User:
       type: object
@@ -649,8 +766,8 @@ components:
           example: Anderson
         phone:
           type: string
-          example: 0973452312
-          description: The phone number of user, must go with country-identifying prefix, like +38
+          example: "0973452312"
+          description: The phone number of user, must go without country-identifying prefix, like +38
         email:
           type: string
           example: m.anderson@gmil.com
@@ -692,8 +809,8 @@ components:
           example: 5
         menu_id:
           type: integer
-          format: int64 # 32?
-          example: 7
+          format: int64
+          example: 1
     Custom:
       type: object
       properties:
@@ -710,14 +827,14 @@ components:
           type: string
           format: date-time
           example: 2021-01-30T08:30:00Z
-        details_list:
-          type: array
-          items:
-            $ref: '#/components/schemas/Details'
-        user:
-          $ref: '#/components/schemas/User'
-        address:
-          $ref: '#/components/schemas/Address'
+        user_id:
+          type: integer
+          format: int64
+          example: 1
+        address_id:
+          type: integer
+          format: int64
+          example: 1
     Menu:
       type: object
       properties:
@@ -742,10 +859,6 @@ components:
           type: boolean
           description: In case drink/confection is not available, indicates whether it is in the demand list or not
           example: true
-        ingredients_list:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ingredient'
 
     Ingredient:
       type: object
@@ -762,6 +875,14 @@ components:
           type: number
           format: float
           description: The percentage of extra charge
+        menu_id:
+          type: integer
+          format: int64
+          example: 1
+        product_id:
+          type: integer
+          format: int64
+          example: 1
 
     Product:
       type: object
@@ -782,6 +903,26 @@ components:
           type: number
           format: float
           description: Total weight of product
+
+    CustomStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "prepared"
+
+    MenuFilter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Latte"
+        products:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+
   securitySchemes:
     basicAuth:
       type: http

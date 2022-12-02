@@ -93,7 +93,7 @@ alembic init alembic
 ```
 ## Змінити налаштування в alembic.ini файлі:
 
-sqlalchemy.url = mysql+mysqldb://root:root@localhost:3306/database_name
+sqlalchemy.url = postgresql://postgres:12345@localhost:5432/al-trecolore-menu
 ## Встановити пакет mysqlclient:
 ```
 pip install mysqlclient
@@ -135,21 +135,15 @@ alembic upgrade head
 - GetUser // role_client, role_manager
 - GetAllUsers // role_manager
 - SetRole // role_manager
-2) Address:
-- Add // role_client, role_manager
-- Delete // role_manager
-- GetAddress // role_client, role_manager
-- GetAllAddresses // role_manager
+2) Address
 3) Order:
 - Add // role_client, role_manager
 - SetStatus // role_manager
+- UpdateOrder // role_manager
 - GetOrder // role_client, role_manager
 - GetAllOrders // role_manager
 - Delete // role_client, role_manager
-4) Details:
-- Update // role_manager
-- GetAllDetailsForOrder // role_client, role_manager
-- GetAllDetails // role_manager
+4) Details
 5) Menu:
 - GetAllMenu // role_viewer, role_client, role_manager
 - GetMenu // role_viewer, role_client, role_manager
@@ -157,12 +151,8 @@ alembic upgrade head
 - Add // role_manager
 - Update // role_manager
 - Delete // role_manager
-6) Ingredient:
-- Add // role_manager
-- Update // role_manager
-- GetIngredient // role_manager
-- GetAllIngredients // role_manager
-- Delete // role_manager
+- FilterMenu // role_client, role_manager
+6) Ingredient
 7) Product:
 - Add // role_manager
 - Update // role_manager
