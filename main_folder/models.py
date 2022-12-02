@@ -6,8 +6,8 @@ import enum
 app = Flask(__name__)
 app.secret_key = 'just secret key'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:12345@localhost:5432/al-trecolore-menu"
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:databasesql2022@localhost:5432/al-trecolore-menu"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:12345@localhost:5432/al-trecolore-menu"
+# app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:databasesql2022@localhost:5432/al-trecolore-menu"
 # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+mysqldb://root:databasesql2022@localhost:3306/al-trecolore-menu"
 
 db = SQLAlchemy(app)
@@ -39,25 +39,20 @@ class Person(db.Model):
     password = db.Column(db.String(250), nullable=False)
     role = db.Column(db.Enum(PersonStatus), nullable=False, default="client")
 
-    '''
-     def __repr__(self):
-        return "<User: '{}' '{}', email: '{}'>" \
-            .format(self.first_name, self.last_name, self.email) '''
-
     def as_dict(self):
         return {p.name: getattr(self, p.name) for p in self.__table__.columns}
 
-    def is_authenticated(self) -> bool:
-        return True
-
-    def is_active(self) -> bool:
-        return True
-
-    def is_anonymous(self) -> bool:
-        return False
-
-    def get_id(self):
-        return self.id
+    # def is_authenticated(self) -> bool:
+    #     return True
+    #
+    # def is_active(self) -> bool:
+    #     return True
+    #
+    # def is_anonymous(self) -> bool:
+    #     return False
+    #
+    # def get_id(self):
+    #     return self.id
 
 
 class Address(db.Model):
@@ -67,11 +62,6 @@ class Address(db.Model):
     street = db.Column(db.String(45), nullable=False)
     house = db.Column(db.String(45), nullable=False)
     flat = db.Column(db.Integer, nullable=True)
-
-
-"""     def __repr__(self):
-        return "<Additional passenger : '{}' '{}', email: '{}'>" \
-            .format(self.first_name, self.last_name, self.email) """
 
 
 class Product(db.Model):
@@ -85,11 +75,6 @@ class Product(db.Model):
     def as_dict(self):
         return {p.name: getattr(self, p.name) for p in self.__table__.columns}
 
-    """     
-    def __repr__(self):
-        return "<Booking by user id: '{}', price: '{} >" \
-            .format( self.userid, self.total_price) """
-
 
 class Menu(db.Model):
     __tablename__ = 'menu'
@@ -102,11 +87,6 @@ class Menu(db.Model):
 
     def as_dict(self):
         return {p.name: getattr(self, p.name) for p in self.__table__.columns}
-
-    """     
-    def __repr__(self):
-        return "<Sit number : '{}', availability : '{}', price: '{}'>" \
-            .format(self.sitnumber, self.available, self.price) """
 
 
 class Custom(db.Model):
@@ -122,11 +102,6 @@ class Custom(db.Model):
     def as_dict(self):
         return {p.name: getattr(self, p.name) for p in self.__table__.columns}
 
-    '''
-    def __repr__(self):
-        return "<Booking by user id: '{}', price: '{} >" \
-            .format( self.userid, self.total_price) '''
-
 
 class Details(db.Model):
     __tablename__ = 'details'
@@ -135,12 +110,6 @@ class Details(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=1)
     custom_id = db.Column(db.Integer, db.ForeignKey('custom.id'))
     menu_id = db.Column(db.Integer, db.ForeignKey('menu.id'))
-
-
-"""
-    def __repr__(self):
-        return "<Flight  '{}' - '{}' on '{}'>" \
-            .format(self.flight_from, self.flight_to, self.flight_date) """
 
 
 class Ingredient(db.Model):
@@ -152,11 +121,5 @@ class Ingredient(db.Model):
     menu_id = db.Column(db.Integer, db.ForeignKey('menu.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
 
-
-"""     def __repr__(self):
-        return "<Flight  '{}' - '{}' on '{}'>" \
-            .format(self.flight_from, self.flight_to, self.flight_date) """
-
-
-if __name__ == "__main__":
-    app.run()
+    def get_menu_id(self):
+        return self.menu_id

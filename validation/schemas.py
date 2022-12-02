@@ -1,7 +1,7 @@
-from database.models import db
+from main_folder.models import db
 import datetime
 from marshmallow import Schema, fields, validate, validates, ValidationError
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 
 
 class PersonSchema(Schema):
@@ -13,14 +13,14 @@ class PersonSchema(Schema):
                                    validate.Length(min=5, max=45)],
                          required=True)
     phone = fields.Str(required=True,
-                       validate=[validate.Length(equal=10)])
+                       validate=validate.Length(equal=10))
     email = fields.Email(required=True)
     password = fields.Function(  # validate=validate.Length(min=5, max=15),
                                deserialize=lambda password: generate_password_hash(password),
                                load_only=True, required=True
                                )
     role = fields.Str(dump_default='client',
-                      validate=validate.OneOf('client', 'manager'),
+                      validate=validate.OneOf(['client', 'manager']),
                       required=False)
 
     @validates('phone')
@@ -55,6 +55,20 @@ class PersonToUpdateSchema(Schema):
             raise ValidationError(f'Incorrect phone number.')
 
 
+class DetailsSchema(Schema):
+    id = fields.Integer(validate=validate.Range(min=1), required=False)
+    quantity = fields.Integer(validate=validate.Range(min=1), required=True)
+    custom_id = fields.Integer(validate=validate.Range(min=1), required=False)
+    menu_id = fields.Integer(validate=validate.Range(min=1), required=True)
+
+
+class DetailsToUpdateSchema(Schema):
+    id = fields.Integer(validate=validate.Range(min=1), required=True)
+    quantity = fields.Integer(validate=validate.Range(min=1), required=False)
+    custom_id = fields.Integer(validate=validate.Range(min=1), required=False)
+    menu_id = fields.Integer(validate=validate.Range(min=1), required=False)
+
+
 class CustomSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=0))
     price = fields.Float(validate=validate.Range(min=0), required=True)
@@ -63,11 +77,12 @@ class CustomSchema(Schema):
                            validate=lambda x: x <= datetime.datetime.now())
     status = fields.Str(dump_default='registered',
                         validate=validate.OneOf(['registered', 'processed', 'accepted',
-                                                'prepared', 'delivered', 'done',
-                                                'cancelled']),
+                                                'prepared', 'delivered', 'done', 'cancelled']),
                         required=False)
     address_id = fields.Integer(validate=validate.Range(min=0), required=True)
     user_id = fields.Integer(validate=validate.Range(min=0), required=True)
+    details = fields.List(fields.Nested(DetailsSchema()), required=True)
+    # details = fields.List(fields.Str(), required=True)
 
 
 class CustomToUpdateSchema(Schema):
@@ -77,14 +92,30 @@ class CustomToUpdateSchema(Schema):
                            validate=lambda x: x <= datetime.datetime.now())
     address_id = fields.Integer(validate=validate.Range(min=0))
     user_id = fields.Integer(validate=validate.Range(min=0))
+    # details = fields.List(fields.Nested(DetailsToUpdateSchema()), required=False)
 
 
 class CustomUpdateStatusSchema(Schema):
     status = fields.Str(dump_default='registered',
                         validate=validate.OneOf(['registered', 'processed', 'accepted',
-                                                'prepared', 'delivered', 'done',
-                                                'cancelled']),
+                                                'prepared', 'delivered', 'done', 'cancelled']),
                         required=True)
+
+
+class IngredientSchema(Schema):
+    id = fields.Integer(validate=validate.Range(min=1), required=False)
+    weight = fields.Integer(validate=validate.Range(min=1), required=True)
+    percent = fields.Integer(validate=validate.Range(min=1, max=100), required=True)
+    menu_id = fields.Integer(validate=validate.Range(min=1), required=False)
+    product_id = fields.Integer(validate=validate.Range(min=1), required=True)
+
+
+class IngredientToUpdateSchema(Schema):
+    id = fields.Integer(validate=validate.Range(min=1), required=True)
+    weight = fields.Integer(validate=validate.Range(min=1), required=False)
+    percent = fields.Integer(validate=validate.Range(min=1, max=100), required=False)
+    menu_id = fields.Integer(validate=validate.Range(min=1), required=False)
+    product_id = fields.Integer(validate=validate.Range(min=1), required=False)
 
 
 class MenuSchema(Schema):
@@ -94,14 +125,16 @@ class MenuSchema(Schema):
     price = fields.Float(validate=validate.Range(min=0), required=True)
     availability = fields.Boolean()
     demand = fields.Boolean()
+    ingredients = fields.List(fields.Nested(IngredientSchema()), required=True)
 
 
 class MenuToUpdateSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=0))
-    name = fields.Str(validate=[validate.Length(min=3, max=45)])
-    price = fields.Float(validate=validate.Range(min=0))
+    name = fields.Str(validate=validate.Length(min=3, max=45), required=False)
+    price = fields.Float(validate=validate.Range(min=0), required=False)
     availability = fields.Boolean()
     demand = fields.Boolean()
+    # ingredients = fields.List(fields.Nested(IngredientToUpdateSchema()), required=False)
 
 
 class ProductSchema(Schema):
@@ -117,6 +150,13 @@ class ProductToUpdateSchema(Schema):
     name = fields.Str(validate=[validate.Length(min=3, max=45)])
     price = fields.Float(validate=validate.Range(min=0))
     weight = fields.Float(validate=validate.Range(min=0))
+
+
+# class AddressSchema(Schema):
+#     id = fields.Integer(validate=validate.Range(min=0))
+#     street = fields.Str(validate=[validate.Length(min=3, max=45)])
+#     house = fields.Str(validate=[validate.Length(min=1, max=45)])
+#     flat = fields.Float(validate=validate.Range(min=0))
 
 
 def add_input(model_class, **kwargs):

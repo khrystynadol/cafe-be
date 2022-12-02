@@ -96,4 +96,9 @@ def downgrade() -> None:
     op.drop_table('person')
     op.drop_table('menu')
     op.drop_table('address')
+    sa.Enum('client', 'manager',
+            name='personstatus').drop(op.get_bind())
+    sa.Enum('registered', 'processed', 'accepted',
+            'prepared', 'delivered', 'done', 'cancelled',
+            name='customstatus').drop(op.get_bind())
     # ### end Alembic commands ###
