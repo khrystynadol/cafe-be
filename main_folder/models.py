@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 # from sqlalchemy.sql import func
 import enum
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'just secret key'
@@ -81,9 +82,12 @@ class Menu(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(45), nullable=False)
+    description = db.Column(db.String(1000), nullable=False)
     price = db.Column(db.Integer, nullable=False)
+    weight = db.Column(db.Integer, nullable=False)
     availability = db.Column(db.Boolean, nullable=False, default=False)
     demand = db.Column(db.Boolean, nullable=False, default=False)
+    percent = db.Column(db.Integer, nullable=False, default=20)
 
     def as_dict(self):
         return {p.name: getattr(self, p.name) for p in self.__table__.columns}
@@ -117,9 +121,50 @@ class Ingredient(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     weight = db.Column(db.Float, nullable=False)
-    percent = db.Column(db.Integer, nullable=False, default=20)
     menu_id = db.Column(db.Integer, db.ForeignKey('menu.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
 
     def get_menu_id(self):
         return self.menu_id
+
+
+class MenuPicture(db.Model):
+    __tablename__ = 'menu_picture'
+
+    id = db.Column(db.Integer, primary_key=True)
+    img = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=False)
+    mimetype = db.Column(db.Text, nullable=False)
+    menu_id = db.Column(db.Integer, db.ForeignKey('menu.id'))
+
+    def as_dict(self):
+        return {p.name: getattr(self, p.name) for p in self.__table__.columns}
+
+
+class ArchivePerson(db.Model):
+    __tablename__ = 'archive_person'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(45), nullable=False)
+    surname = db.Column(db.String(45), nullable=False)
+    phone = db.Column(db.String(13), nullable=False)
+    email = db.Column(db.String(100), unique=False, nullable=False)
+    password = db.Column(db.String(250), nullable=False)
+    role = db.Column(db.Enum(PersonStatus), nullable=False, default="client")
+
+    def as_dict(self):
+        return {p.name: getattr(self, p.name) for p in self.__table__.columns}
+
+
+class ArchiveCustom(db.Model):
+    __tablename__ = 'archive_custom'
+
+    id = db.Column(db.Integer, primary_key=True)
+    price = db.Column(db.Float, nullable=False)
+    time = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.Enum(CustomStatus), nullable=False, default="registered")
+    address_id = db.Column(db.Integer, db.ForeignKey('address.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('archive_person.id'))
+
+    def as_dict(self):
+        return {p.name: getattr(self, p.name) for p in self.__table__.columns}

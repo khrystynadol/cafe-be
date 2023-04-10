@@ -3,6 +3,8 @@ import datetime
 from marshmallow import Schema, fields, validate, validates, ValidationError
 from werkzeug.security import generate_password_hash
 
+# alembic revision --autogenerate -m "Commit 1"
+
 
 class PersonSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=0))
@@ -105,35 +107,40 @@ class CustomUpdateStatusSchema(Schema):
 class IngredientSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=1), required=False)
     weight = fields.Integer(validate=validate.Range(min=1), required=True)
-    percent = fields.Integer(validate=validate.Range(min=1, max=100), required=True)
     menu_id = fields.Integer(validate=validate.Range(min=1), required=False)
-    product_id = fields.Integer(validate=validate.Range(min=1), required=True)
+    product_name = fields.Str(validate=[validate.Length(min=3, max=45)], required=True)
 
 
 class IngredientToUpdateSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=1), required=True)
     weight = fields.Integer(validate=validate.Range(min=1), required=False)
-    percent = fields.Integer(validate=validate.Range(min=1, max=100), required=False)
     menu_id = fields.Integer(validate=validate.Range(min=1), required=False)
-    product_id = fields.Integer(validate=validate.Range(min=1), required=False)
+    product_name = fields.Str(validate=[validate.Length(min=3, max=45)], required=False)
 
 
 class MenuSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=0))
     name = fields.Str(validate=[validate.Length(min=3, max=45)],
                       required=True)
+    description = fields.Str(validate=[validate.Length(min=3, max=1000)],
+                             required=True)
     price = fields.Float(validate=validate.Range(min=0), required=True)
+    weight = fields.Float(validate=validate.Range(min=0), required=True)
     availability = fields.Boolean()
     demand = fields.Boolean()
-    ingredients = fields.List(fields.Nested(IngredientSchema()), required=True)
+    percent = fields.Integer(validate=validate.Range(min=1, max=100), required=True)
+    ingredients = fields.List(fields.Nested(IngredientSchema()), required=False)
 
 
 class MenuToUpdateSchema(Schema):
     id = fields.Integer(validate=validate.Range(min=0))
     name = fields.Str(validate=validate.Length(min=3, max=45), required=False)
+    description = fields.Str(validate=[validate.Length(min=3, max=1000)], required=False)
     price = fields.Float(validate=validate.Range(min=0), required=False)
+    weight = fields.Float(validate=validate.Range(min=0), required=False)
     availability = fields.Boolean()
     demand = fields.Boolean()
+    percent = fields.Integer(validate=validate.Range(min=1, max=100), required=True)
     # ingredients = fields.List(fields.Nested(IngredientToUpdateSchema()), required=False)
 
 

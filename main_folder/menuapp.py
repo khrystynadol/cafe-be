@@ -1,6 +1,9 @@
-from flask import request, jsonify
-from main_folder.models import app, PersonStatus, Person, Custom, Menu, Product, Details, Ingredient  # Address, Details
+import base64
+import io
 
+from flask import request, jsonify, render_template, Response, send_file, make_response
+from main_folder.models import app, PersonStatus, Person, Custom, Menu, Product, Details, Ingredient, \
+    ArchiveCustom, ArchivePerson, MenuPicture  # Address, Details
 from werkzeug.security import check_password_hash
 from validation.schemas import *
 from flask_cors import CORS
@@ -8,11 +11,11 @@ from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPBasicAuth
 import json
+from werkzeug.utils import secure_filename
 
 app.debug = True
 
 CORS(app)
-
 auth = HTTPBasicAuth()
 
 
@@ -48,19 +51,24 @@ def error_handler(func):
             # result = 0
             if len(kwargs) == 0:
                 result = func()
+                print(1, result)
             else:
                 result = func(**kwargs)
+                print(2, result)
             if result.__class__ == tuple and result[1] >= 400:
+                print(3, result[0])
                 return {"code": result[1],
                         "message": result[0]
                         }, result[1]
             else:
                 return result
         except ValidationError as err:
+            print(4, err.messages)
             return {"code": 400,
                     "message": err.messages
                     }, 400
         except IntegrityError as err:
+            print(5, err.args)
             return {"code": 409,
                     "message": err.args
                     }, 409
@@ -80,26 +88,28 @@ def user():
 
 @app.route("/user/login", methods=['POST'])
 @error_handler
-@auth.login_required(role=['client', 'manager'])
+# @auth.login_required(role=['client', 'manager'])
 def login():
     if request.method == 'POST':
-        #     login_data = request.get_json()
-        #     user_login = Person.query.filter_by(email=login_data['email']).first()
-        #
-        #     if user_login is None:
-        #         return {
-        #             "message": "There is no user with such email"
-        #         }, 412
-        #     elif not check_password_hash(user_login.password, login_data['password']):
-        #         return {
-        #             "message": "Incorrect password"
-        #         }, 412
-        #     else:
-        #         return {
-        #             "id": user_login.id,
-        #             "message": "Success"
-        #         }, 201
-        return jsonify(PersonSchema().dump(auth.current_user())), 201
+        login_data = request.get_json()
+        user_login = Person.query.filter_by(email=login_data['email']).first()
+
+        if user_login is None:
+            return {
+                "message": "There is no user with such email"
+            }, 412
+        elif not check_password_hash(user_login.password, login_data['password']):
+            return {
+                "message": "Incorrect password"
+            }, 412
+        else:
+            return {
+                "id": user_login.id,
+                'role': user_login.role.value,
+                "message": "Success"
+            }, 201
+        # print("Person data", jsonify(PersonSchema().dump(auth.current_user())))
+    return jsonify(PersonSchema().dump(auth.current_user())), 201
 
 
 @app.route("/user/logout", methods=['DELETE'])
@@ -149,10 +159,18 @@ def user_to(user_id):
             # if person_to_delete is None:
             #     return {"message": "There is no user with such id"}, 404
             # else:
+            archive_person = ArchivePerson(name=person_to_delete.name, surname=person_to_delete.surname,
+                                           phone=person_to_delete.phone, email=person_to_delete.email,
+                                           password=person_to_delete.password, role=person_to_delete.role)
+            db.session.add(archive_person)
+            archive_person_info = ArchivePerson.query.filter_by(email=person_to_delete.email).first()
             for i in order_to_delete:
                 details_to_delete = Details.query.filter_by(custom_id=i.id).all()
                 for j in details_to_delete:
                     delete_input(j)
+                archive_custom = ArchiveCustom(price=i.price, time=i.time, status=i.status,
+                                               user_id=archive_person_info.id)
+                db.session.add(archive_custom)
                 delete_input(i)
             delete_input(person_to_delete)
             return {"message": "Success"}, 200
@@ -290,12 +308,17 @@ def get_all_cust():
 def menu():
     if request.method == 'POST' and request.is_json:
         menu_data = MenuSchema().load(request.json)
+        print(menu_data)
         ingredients = menu_data['ingredients']
         menu_data.pop('ingredients')
         new_menu = add_input(Menu, **menu_data)
         for ingredient in ingredients:
             ingredient_data = IngredientSchema().load(ingredient)
-            new_ingredient = Ingredient(**ingredient_data)
+            product_name = ingredient_data['product_name']
+            product_info = Product.query.filter_by(name=product_name).first()
+            new_ingredient = Ingredient()
+            new_ingredient.weight = ingredient_data['weight']
+            new_ingredient.product_id = product_info.id
             new_ingredient.menu_id = new_menu.id
             db.session.add(new_ingredient)
             db.session.commit()
@@ -339,7 +362,7 @@ def menu_to(menu_id):
             return jsonify(MenuToUpdateSchema().dump(menu_to_update)), 200
 
 
-@app.route("/menu//<int:menu_id>/AddToDemand", methods=['PUT'])
+@app.route("/menu/<int:menu_id>/AddToDemand", methods=['PUT'])
 @auth.login_required(role=['client', 'manager'])
 def add_to_demand(menu_id):
     if request.method == 'PUT':
@@ -426,6 +449,77 @@ def get_all_prod():
                           indent=4, sort_keys=True, default=str), 200
 
 
-# @app.route("/hello-world-<value>")
-# def hello_world(value):
-#     return "Hello world " + value, 200
+@app.route('/upload', methods=['POST'])
+@auth.login_required(role='manager')
+def upload():
+    pic = request.files['picture_data']
+    menu_id = request.form.get('menu_id')
+
+    if not pic:
+        return 'No pic uploaded!', 400
+
+    filename = secure_filename(pic.filename)
+    mimetype = pic.mimetype
+    if not filename or not mimetype:
+        return 'Bad upload!', 400
+
+    # img = MenuPicture(img=pic['img'], mimetype=pic['mimetype'], name=pic['filename'], menu_id=menu_id)
+    img = MenuPicture(img=pic.read(), name=filename, mimetype=mimetype, menu_id=menu_id)
+    db.session.add(img)
+    db.session.commit()
+    return 'Img Uploaded!', 200
+
+    # response = make_response('Img Uploaded!', 200)
+    # response.headers.add('Access-Control-Allow-Origin', 'http://localhost:63342')
+    # return response
+    # response = make_response('Img Uploaded!', 200)
+    # response.headers['Access-Control-Allow-Origin'] = '*'
+
+
+@app.route('/image/getAll', methods=['GET'])
+@auth.login_required(role='manager')
+def upload_all():
+    if request.method == 'GET':
+        return json.dumps([p.as_dict() for p in MenuPicture.query.all()],
+                          indent=4, sort_keys=True, default=str), 200
+
+
+@app.route('/image/<int:img_id>', methods=['GET'])
+def get_img(img_id):
+    image_to_send = MenuPicture.query.filter_by(menu_id=img_id).first()
+    if not image_to_send:
+        return 'Image Not Found!', 404
+    else:
+        return {"id": image_to_send.id,
+                "img": image_to_send.img,
+                "name": image_to_send.name,
+                "mimetype": image_to_send.mimetype,
+                "menu_id": image_to_send.menu_id
+                }
+    # padding = b'=' * (4 - len(image_to_send.img) % 4)
+    # image_data = base64.b64decode(image_to_send.img.encode() + padding)
+    #
+    # response = make_response(image_data)
+    # response.headers.set('Content-Type', image_to_send.mimetype)
+    # response.headers.set('Content-Disposition', 'inline', filename=image_to_send.name)
+
+    # return response
+    # padding = b'=' * (4 - len(image_to_send.img) % 4)
+    # image_data = base64.b64decode(image_to_send.img.encode() + padding)
+    # return send_file(io.BytesIO(image_data), mimetype=image_to_send.mimetype)
+    # return {
+    #     "image": image_to_send.img,
+    #     "mimetype": image_to_send.mimetype
+    # }, 200
+
+
+@app.route('/user/role', methods=['GET'])
+@auth.login_required(role=['client', 'manager'])
+def get_user_role():
+    email = request.args.get('email')
+    person = Person.query.filter_by(email=email).first()
+
+    if person is None:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({'role': person.role.value})
