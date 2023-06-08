@@ -1,6 +1,5 @@
-import base64
-import io
-
+# import base64
+# import io
 from flask import request, jsonify, render_template, Response, send_file, make_response
 from main_folder.models import app, PersonStatus, Person, Custom, Menu, Product, Details, Ingredient, \
     ArchiveCustom, ArchivePerson, MenuPicture  # Address, Details
@@ -11,10 +10,15 @@ from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPBasicAuth
 import json
-from werkzeug.utils import secure_filename
+# from werkzeug.utils import secure_filename
+from flask_socketio import SocketIO
 
 app.debug = True
-
+socket_ = SocketIO(app, cors_allowed_origins="*", async_mode='threading', transports=['websocket', 'polling'])
+# allowed_origins = [
+#     'http://localhost:4200'
+# ]
+# CORS(app, origins=allowed_origins)
 CORS(app)
 auth = HTTPBasicAuth()
 
@@ -83,6 +87,8 @@ def user():
     if request.method == 'POST' and request.is_json:
         data_user = PersonSchema().load(request.json)
         new_user = add_input(Person, **data_user)
+        users = [p.as_dict() for p in Person.query.all()]
+        socket_.emit('all_users', users)
         return jsonify(PersonSchema().dump(new_user)), 201
 
 
@@ -96,18 +102,18 @@ def login():
 
         if user_login is None:
             return {
-                "message": "There is no user with such email"
-            }, 412
+                       "message": "There is no user with such email"
+                   }, 412
         elif not check_password_hash(user_login.password, login_data['password']):
             return {
-                "message": "Incorrect password"
-            }, 412
+                       "message": "Incorrect password"
+                   }, 412
         else:
             return {
-                "id": user_login.id,
-                'role': user_login.role.value,
-                "message": "Success"
-            }, 201
+                       "id": user_login.id,
+                       'role': user_login.role.value,
+                       "message": "Success"
+                   }, 201
         # print("Person data", jsonify(PersonSchema().dump(auth.current_user())))
     return jsonify(PersonSchema().dump(auth.current_user())), 201
 
@@ -131,6 +137,8 @@ def user_update(user_id):
         person_data = PersonToUpdateSchema().load(request.json)
         person_to_update = Person.query.filter_by(id=user_id).first()
         update_input(person_to_update, **person_data)
+        users = [p.as_dict() for p in Person.query.all()]
+        socket_.emit('all_users', users)
         return jsonify(PersonToUpdateSchema().dump(person_to_update)), 200
 
 
@@ -173,6 +181,8 @@ def user_to(user_id):
                 db.session.add(archive_custom)
                 delete_input(i)
             delete_input(person_to_delete)
+            users = [p.as_dict() for p in Person.query.all()]
+            socket_.emit('all_users', users)
             return {"message": "Success"}, 200
         # else:
         #     return {"message": "You try to delete another user"}, 408
@@ -190,15 +200,21 @@ def make_m(user_id):
         else:
             user_to_work.role = PersonStatus.manager.value
             db.session.commit()
+            users = [p.as_dict() for p in Person.query.all()]
+            socket_.emit('all_users', users)
             return {"message": "Success"}, 200
 
 
-@app.route("/user/getAll", methods=['GET'])
-@auth.login_required(role='manager')
-def get_all_user():
-    if request.method == 'GET':
-        return json.dumps([p.as_dict() for p in Person.query.all()],
-                          indent=4, sort_keys=True, default=str), 200
+# @app.route("/user/getAll", methods=['GET'])
+@socket_.on('get_all_users')  # , namespace="/user/getAll")
+# @auth.login_required(role='manager')
+def get_all_users():
+    users = [p.as_dict() for p in Person.query.all()]
+    print(users)
+    socket_.emit('all_users', users)
+    # if request.method == 'GET':
+    #     return json.dumps([p.as_dict() for p in Person.query.all()],
+    #                       indent=4, sort_keys=True, default=str), 200
 
 
 @app.route("/custom", methods=['POST'])
@@ -228,6 +244,7 @@ def custom():
                 new_detail.custom_id = new_custom.id
                 db.session.add(new_detail)
                 db.session.commit()
+        socket_.emit('all_customs', [p.as_dict() for p in Custom.query.all()])
         return jsonify(CustomSchema().dump(new_custom)), 201
         # find_email = Person.query.filter_by(email=data_user.email).first()
         # return {"id": new_custom.id}, 201
@@ -260,6 +277,7 @@ def custom_to(custom_id):
             for i in details_to_delete:
                 delete_input(i)
             delete_input(custom_to_delete)
+            socket_.emit('all_customs', [p.as_dict() for p in Custom.query.all()])
             return {"message": "Success"}, 200
 
 
@@ -277,6 +295,7 @@ def custom_to_update(custom_id):
                 setattr(custom_to_update_1, key, value)
             custom_to_update_1.time = datetime.datetime.now()
             db.session.commit()
+            socket_.emit('all_customs', [p.as_dict() for p in Custom.query.all()])
             return jsonify(CustomToUpdateSchema().dump(custom_to_update_1)), 200
 
 
@@ -291,15 +310,20 @@ def update_cust_status(custom_id):
             return {"message": "Custom not found"}, 404
         else:
             update_input(status_to_update, **status_data)
+            socket_.emit('all_customs', [p.as_dict() for p in Custom.query.all()])
             return jsonify(CustomUpdateStatusSchema().dump(status_to_update)), 200
 
 
-@app.route("/custom/getAll", methods=['GET'])
-@auth.login_required(role='manager')
-def get_all_cust():
-    if request.method == 'GET':
-        return json.dumps([p.as_dict() for p in Custom.query.all()],
-                          indent=4, sort_keys=True, default=str), 200
+@socket_.on('get_all_customs')  # , namespace="/custom/getAll")
+# @app.route("/custom/getAll", methods=['GET'])
+# @auth.login_required(role='manager')
+def get_all_customs():
+    # if request.method == 'GET':
+    #     print(json.dumps([p.as_dict() for p in Custom.query.all()]))
+    #     return json.dumps([p.as_dict() for p in Custom.query.all()],
+    #                       indent=4, sort_keys=True, default=str), 200
+    print([p.as_dict() for p in Custom.query.all()])
+    socket_.emit('all_customs', [p.as_dict() for p in Custom.query.all()])
 
 
 @app.route("/menu", methods=['POST'])
@@ -375,11 +399,13 @@ def add_to_demand(menu_id):
             return {"message": "Success"}, 200
 
 
+# @socket_.on('get_all_menu')  # , namespace="/menu/getAll")
 @app.route("/menu/getAll", methods=['GET'])
 def get_all_menu():
     if request.method == 'GET':
         return json.dumps([p.as_dict() for p in Menu.query.all()],
                           indent=4, sort_keys=True, default=str), 200
+    # socket_.emit('all_customs', [p.as_dict() for p in Menu.query.all()])
 
 
 @app.route("/menu/filter", methods=['PUT'])
@@ -409,6 +435,7 @@ def product():
     if request.method == 'POST' and request.is_json:
         product_data = ProductSchema().load(request.json)
         new_product = add_input(Product, **product_data)
+        socket_.emit('all_products', [p.as_dict() for p in Product.query.all()])
         return jsonify(ProductSchema().dump(new_product)), 201
 
 
@@ -430,6 +457,7 @@ def product_to(product_id):
             for i in ingredients_to_delete:
                 delete_input(i)
             delete_input(product_to_delete)
+            socket_.emit('all_products', [p.as_dict() for p in Product.query.all()])
             return {"message": "Success"}, 200
     elif request.method == 'PUT' and request.is_json:
         product_data = ProductToUpdateSchema().load(request.json)
@@ -438,36 +466,49 @@ def product_to(product_id):
             return {"message": "Menu item not found"}, 404
         else:
             update_input(product_to_update, **product_data)
+            socket_.emit('all_products', [p.as_dict() for p in Product.query.all()])
             return jsonify(MenuToUpdateSchema().dump(product_to_update)), 200
 
 
-@app.route("/product/getAll", methods=['GET'])
-@auth.login_required(role='manager')
-def get_all_prod():
-    if request.method == 'GET':
-        return json.dumps([p.as_dict() for p in Product.query.all()],
-                          indent=4, sort_keys=True, default=str), 200
+# @app.route("/product/getAll", methods=['GET'])
+@socket_.on('get_all_products')  # , namespace="/product/getAll")
+# @auth.login_required(role='manager')
+def get_all_products():
+    products = [p.as_dict() for p in Product.query.all()]
+    print(f"Product count: {len(products)}")
+    socket_.emit('all_products', products)
+    # if request.method == 'GET':
+    #     return json.dumps([p.as_dict() for p in Product.query.all()],
+    #                       indent=4, sort_keys=True, default=str), 200
 
 
 @app.route('/upload', methods=['POST'])
 @auth.login_required(role='manager')
+@error_handler
 def upload():
-    pic = request.files['picture_data']
-    menu_id = request.form.get('menu_id')
+    img_data = PhotoSchema().load(request.json)
+    print(img_data)
+    new_photo = add_input(MenuPicture, **img_data)
+    return jsonify(PhotoSchema().dump(new_photo)), 201
+    # picture_data = request.get_json()
+    # print(picture_data)
+    # pic = request.files['picture_data']
+    # picture_name = picture_data['name']
+    # menu_id = picture_data['menu_id']
+    # print(picture_name, menu_id)
+    # if not picture_name or not menu_id:
+    #     return 'No pic uploaded!', 400
 
-    if not pic:
-        return 'No pic uploaded!', 400
-
-    filename = secure_filename(pic.filename)
-    mimetype = pic.mimetype
-    if not filename or not mimetype:
-        return 'Bad upload!', 400
+    # filename = secure_filename(pic.filename)
+    # mimetype = pic.mimetype
+    # if not filename or not mimetype:
+    #     return 'Bad upload!', 400
 
     # img = MenuPicture(img=pic['img'], mimetype=pic['mimetype'], name=pic['filename'], menu_id=menu_id)
-    img = MenuPicture(img=pic.read(), name=filename, mimetype=mimetype, menu_id=menu_id)
-    db.session.add(img)
-    db.session.commit()
-    return 'Img Uploaded!', 200
+
+    # img = MenuPicture(name=picture_name, menu_id=menu_id)
+    # db.session.add(img)
+    # db.session.commit()
 
     # response = make_response('Img Uploaded!', 200)
     # response.headers.add('Access-Control-Allow-Origin', 'http://localhost:63342')
@@ -491,9 +532,9 @@ def get_img(img_id):
         return 'Image Not Found!', 404
     else:
         return {"id": image_to_send.id,
-                "img": image_to_send.img,
+                # "img": image_to_send.img,
                 "name": image_to_send.name,
-                "mimetype": image_to_send.mimetype,
+                # "mimetype": image_to_send.mimetype,
                 "menu_id": image_to_send.menu_id
                 }
     # padding = b'=' * (4 - len(image_to_send.img) % 4)

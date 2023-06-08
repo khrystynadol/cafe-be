@@ -3,14 +3,14 @@ from werkzeug.security import generate_password_hash
 
 with app.app_context():
     person1 = Person(name="Khrystyna", surname="Dolynska", phone="0962250511",
-                     email="manager1@gmail.com", password=generate_password_hash("12345"),
+                     email="manager1@gmail.com", password=generate_password_hash("12345a"),
                      role=PersonStatus.manager.value)
     db.session.add(person1)
     person2 = Person(name="Ivan", surname="Ivanov", phone="0934864659",
-                     email="user2@gmail.com", password=generate_password_hash("12345"),
+                     email="user2@gmail.com", password=generate_password_hash("12345a"),
                      role=PersonStatus.client.value)
     person3 = Person(name="Kate", surname="Lover", phone="0685222554",
-                     email="user3@gmail.com", password=generate_password_hash("12345"),
+                     email="user3@gmail.com", password=generate_password_hash("12345a"),
                      role=PersonStatus.client.value)
 
     address1 = Address(street="Konyskogo", house="125а", flat=15)

@@ -40,8 +40,17 @@ class Person(db.Model):
     password = db.Column(db.String(250), nullable=False)
     role = db.Column(db.Enum(PersonStatus), nullable=False, default="client")
 
+    # def as_dict(self):
+    #     return {p.name: getattr(self, p.name) for p in self.__table__.columns}
+
     def as_dict(self):
-        return {p.name: getattr(self, p.name) for p in self.__table__.columns}
+        return {
+            'name': self.name,
+            'surname': self.surname,
+            'email': self.email,
+            'phone': self.phone,
+            'role': self.role.value
+        }
 
     # def is_authenticated(self) -> bool:
     #     return True
@@ -132,9 +141,9 @@ class MenuPicture(db.Model):
     __tablename__ = 'menu_picture'
 
     id = db.Column(db.Integer, primary_key=True)
-    img = db.Column(db.Text, nullable=False)
+    # img = db.Column(db.Text, nullable=True)
     name = db.Column(db.Text, nullable=False)
-    mimetype = db.Column(db.Text, nullable=False)
+    # mimetype = db.Column(db.Text, nullable=True)
     menu_id = db.Column(db.Integer, db.ForeignKey('menu.id'))
 
     def as_dict(self):

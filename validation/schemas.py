@@ -159,6 +159,12 @@ class ProductToUpdateSchema(Schema):
     weight = fields.Float(validate=validate.Range(min=0))
 
 
+class PhotoSchema(Schema):
+    id = fields.Integer(validate=validate.Range(min=0))
+    name = fields.Str(validate=validate.Length(min=3, max=100), required=True)
+    menu_id = fields.Integer(validate=validate.Range(min=1), required=True)
+
+
 # class AddressSchema(Schema):
 #     id = fields.Integer(validate=validate.Range(min=0))
 #     street = fields.Str(validate=[validate.Length(min=3, max=45)])
