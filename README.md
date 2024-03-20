@@ -81,6 +81,7 @@ pip install Flask Flask-SQLAlchemy
 ```
 ## Specify URI to the data base:
    For mysql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@host:port/database_name"```
+   
    For postgresql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@host:port/database_name"```
 
 ## To create migrations, you need to install the Alembic library in a virtual environment:
@@ -104,11 +105,9 @@ alembic upgrade head
 ```
 
 ## Project description 
-A service for the cafe menu. 
-The manager can add dishes to the database, delete, edit information about them. 
-The possibility of ordering a dish for NOW depends on the availability of the dish (if all the ingredients are available (for this purpose, the database)). 
-In the list, it will be possible to view all dishes to make a pre-order (for a future date). 
-The user can view information about all dishes, place orders for today and for the future (the future requires confirmation from the pharmacist).
+The purpose of this project is to develop the server side of the system for a cafe. 
+The system provides for 2 types of users: a client and a manager. The client has the ability to create orders and add dishes to the demand. The manager adds dishes, changes the status of the order (registered, deleted, etc.), adds products to the database, has access to all the data stored in the database. 
+The result of the system is the ability to view the menu, place orders without leaving home for the client, and keep track of available products and dishes for the manager.
 
 ## Entities:
 - User
