@@ -1,4 +1,59 @@
 # Al Trecolore menu
+## Project description 
+The purpose of this project is to develop the server side of the system for a cafe. 
+The system provides for 2 types of users: a client and a manager. The client has the ability to create orders and add dishes to the demand. The manager adds dishes, changes the status of the order (registered, deleted, etc.), adds products to the database, has access to all the data stored in the database. 
+The result of the system is the ability to view the menu, place orders without leaving home for the client, and keep track of available products and dishes for the manager.
+
+## Entities:
+- User
+- Address
+- Order
+- Details
+- Menu
+- Ingredient
+- Product
+
+## Roles
+- role_viewer
+- role_client
+- role_manager
+
+## Actions on entities + who has access:
+1) User:
+- Add // role_viewer
+- UpdatePersonalInform // role_client, role_manager
+- Login // role_client, role_manage
+- Logout // role_client, role_manager
+- Delete // role_client, role_manager
+- GetUser // role_client, role_manager
+- GetAllUsers // role_manager
+- SetRole // role_manager
+2) Address
+3) Order:
+- Add // role_client, role_manager
+- SetStatus // role_manager
+- UpdateOrder // role_manager
+- GetOrder // role_client, role_manager
+- GetAllOrders // role_manager
+- Delete // role_client, role_manager
+4) Details
+5) Menu:
+- GetAllMenu // role_viewer, role_client, role_manager
+- GetMenu // role_viewer, role_client, role_manager
+- AddToDemand // role_client, role_manager
+- Add // role_manager
+- Update // role_manager
+- Delete // role_manager
+- FilterMenu // role_client, role_manager
+6) Ingredient
+7) Product:
+- Add // role_manager
+- Update // role_manager
+- GetProduct // role_manager
+- GetAllProducts // role_manager
+- Delete // role_manager
+
+
 # System requirements
     Version of python: python 3.7.9
     Virtual environment: venv
@@ -103,60 +158,3 @@ pip install mysqlclient
 ```
 alembic upgrade head
 ```
-
-## Project description 
-The purpose of this project is to develop the server side of the system for a cafe. 
-The system provides for 2 types of users: a client and a manager. The client has the ability to create orders and add dishes to the demand. The manager adds dishes, changes the status of the order (registered, deleted, etc.), adds products to the database, has access to all the data stored in the database. 
-The result of the system is the ability to view the menu, place orders without leaving home for the client, and keep track of available products and dishes for the manager.
-
-## Entities:
-- User
-- Address
-- Order
-- Details
-- Menu
-- Ingredient
-- Product
-
-## Roles
-- role_viewer
-- role_client
-- role_manager
-
-## Actions on entities + who has access:
-1) User:
-- Add // role_viewer
-- UpdatePersonalInform // role_client, role_manager
-- Login // role_client, role_manage
-- Logout // role_client, role_manager
-- Delete // role_client, role_manager
-- GetUser // role_client, role_manager
-- GetAllUsers // role_manager
-- SetRole // role_manager
-2) Address
-3) Order:
-- Add // role_client, role_manager
-- SetStatus // role_manager
-- UpdateOrder // role_manager
-- GetOrder // role_client, role_manager
-- GetAllOrders // role_manager
-- Delete // role_client, role_manager
-4) Details
-5) Menu:
-- GetAllMenu // role_viewer, role_client, role_manager
-- GetMenu // role_viewer, role_client, role_manager
-- AddToDemand // role_client, role_manager
-- Add // role_manager
-- Update // role_manager
-- Delete // role_manager
-- FilterMenu // role_client, role_manager
-6) Ingredient
-7) Product:
-- Add // role_manager
-- Update // role_manager
-- GetProduct // role_manager
-- GetAllProducts // role_manager
-- Delete // role_manager
-
-
- 
