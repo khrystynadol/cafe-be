@@ -75,43 +75,42 @@ waitress-serve --host 127.0.0.1 --port 5000 server:menuapp
 deactivate
 ```
 
-## Для роботи з базою даних mysql необхідно встановити бібліотеку SQLAlchemy ORM , знаходячись у віртуальному середовищі:
+## To work with the mysql database, you need to install the SQLAlchemy ORM library in a virtual environment:
 ```
 pip install Flask Flask-SQLAlchemy
 ```
-## Вказати URI до бази даних :
-   Для mysql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@host:port/database_name"```
-   Для postgresql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@host:port/database_name"```
+## Specify URI to the data base:
+   For mysql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@host:port/database_name"```
+   For postgresql : ```app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@host:port/database_name"```
 
-## Для створення міграцій необхідно встановити бібліотку Alembic у віртуальному середовищі :
+## To create migrations, you need to install the Alembic library in a virtual environment:
 ```
 pip install alembic
 ```
-## Проініцюлювати Alembic:
+## Initiate Alembic:
 ```
 alembic init alembic
 ```
-## Змінити налаштування в alembic.ini файлі:
+## Change the settings in the alembic.ini file:
 
 sqlalchemy.url = postgresql://postgres:12345@localhost:5432/al-trecolore-menu
-## Встановити пакет mysqlclient:
+## Install mysqlclient:
 ```
 pip install mysqlclient
 ```
-## Для створення міргації виконуємо команду
+## To create a migration, run the command
 ```
 alembic upgrade head
 ```
 
-## Опис проекту
-Написати сервіс для роботи меню кафе. 
-Провізор (менеджер) може додавати страви в базу, видаляти, редагувати інформацію про них. 
-Можливість замовлення страви на ВЖЕ залежить від наявності страви (якщо наявні всі інгредієнти (для цього база даних)). 
-В списку буде можливість переглянути всі страви, щоб зробити передзамовлення (на майбутнє число). 
-Користувач може переглядати інформацію про всі страви, 
-здійснювати замовлення на вже та майбутнє (майбутнє вимагає підтвердження провізора).
+## Project description 
+A service for the cafe menu. 
+The manager can add dishes to the database, delete, edit information about them. 
+The possibility of ordering a dish for NOW depends on the availability of the dish (if all the ingredients are available (for this purpose, the database)). 
+In the list, it will be possible to view all dishes to make a pre-order (for a future date). 
+The user can view information about all dishes, place orders for today and for the future (the future requires confirmation from the pharmacist).
 
-## Сутності:
+## Entities:
 - User
 - Address
 - Order
@@ -120,12 +119,12 @@ alembic upgrade head
 - Ingredient
 - Product
 
-## Ролі
+## Roles
 - role_viewer
 - role_client
 - role_manager
 
-## Дії над сутностями + хто має доступ:
+## Actions on entities + who has access:
 1) User:
 - Add // role_viewer
 - UpdatePersonalInform // role_client, role_manager
